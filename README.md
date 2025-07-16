@@ -42,7 +42,7 @@ The lab consists of 8 routers across 3 Autonomous Systems. The core network (AS 
 
 ## Prerequisites
 
--   Ansible 2.9+ installed on a Linux control node.
+-   Ansible installed on a Linux control node.
 -   `sshpass` utility installed (`sudo apt-get install sshpass`).
 -   Password-based or SSH-key-based connectivity established to all network devices.
 
