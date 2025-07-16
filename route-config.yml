@@ -1,0 +1,22 @@
+---
+
+- name: configure and check routes on devices
+  hosts: routers,edges
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: configure routes on devices
+      cisco.ios.ios_config :
+        lines:
+          ip route 0.0.0.0 0.0.0.0 192.168.220.136
+
+    - name: check existing routes on devices
+      cisco.ios.ios_command:
+        commands:
+          - show ip route
+      register: route_output
+
+    - name: display routing table content
+      debug:
+        var: route_output.stdout_lines

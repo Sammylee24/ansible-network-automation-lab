@@ -1,0 +1,21 @@
+---
+
+- name: configure IP on device interfaces
+  hosts: routers,edges
+  gather_facts: no
+  connection: network_cli
+  vars_files:
+    - Router_interfaces.yml
+
+  tasks:
+    - name: configure IP on interfaces
+      cisco.ios.ios_config:
+        lines:
+          - interface {{ item.intf }}
+          - description {{ item.desc }}
+          - no shutdown
+          - ip address {{ item.ip }} {{ item.mask }}
+      loop: "{{ interfaces[inventory_hostname] | default ([]) }}"
+      when:
+        - item.ip is defined
+        - item.mask is defined

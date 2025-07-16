@@ -1,0 +1,25 @@
+[as65001_routers]
+R5 ansible_host=192.168.220.205
+R6 ansible_host=192.168.220.206
+R7 ansible_host=192.168.220.207
+R8 ansible_host=192.168.220.208
+
+[as100_routers]
+R1 ansible_host=192.168.220.201
+R3 ansible_host=192.168.220.203
+
+[as200_routers]
+R2 ansible_host=192.168.220.202
+R4 ansible_host=192.168.220.204
+
+[all_routers:children]
+as65001_routers
+as100_routers
+as200_routers
+
+[all_routers:vars]
+ansible_user=samuel
+ansible_ssh_password=Samuel@123
+ansible_ssh_port=22
+ansible_connection=network_cli
+ansible_network_os=cisco.ios.ios

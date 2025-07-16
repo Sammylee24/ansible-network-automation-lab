@@ -1,0 +1,12 @@
+---
+
+- name: save config on devices
+  hosts: routers,edges
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: save configurations
+      cisco.ios.ios_command:
+        commands:
+          - write memory

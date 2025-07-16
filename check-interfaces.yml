@@ -1,0 +1,18 @@
+---
+
+- name: display device interfaces
+  hosts: routers,edges
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: show interfaces
+      cisco.ios.ios_command:
+        commands:
+          - show interface description
+          - show ip interface brief | include up
+      register: interface_output
+
+    - name: show interfaces on screen
+      debug:
+        var: interface_output.stdout_lines

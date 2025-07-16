@@ -1,0 +1,50 @@
+# network_vars.yml
+---
+interfaces:
+  R1: 
+    bgp_as: 100
+    loopback0_ip: '10.0.0.1' # <-- ADDED
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R5', ip: '10.0.15.1', mask: '255.255.255.252', peer_ip: '10.0.15.2', peer_as: 65001 }
+  R2: 
+    bgp_as: 200
+    loopback0_ip: '10.0.0.2' # <-- ADDED
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R6', ip: '10.0.26.1', mask: '255.255.255.252', peer_ip: '10.0.26.2', peer_as: 65001 }
+  R3: 
+    bgp_as: 100
+    loopback0_ip: '10.0.0.3' # <-- ADDED
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R7', ip: '10.0.37.1', mask: '255.255.255.252', peer_ip: '10.0.37.2', peer_as: 65001 }
+  R4: 
+    bgp_as: 200
+    loopback0_ip: '10.0.0.4' # <-- ADDED
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R8', ip: '10.0.48.1', mask: '255.255.255.252', peer_ip: '10.0.48.2', peer_as: 65001 }
+
+  R5: 
+    bgp_as: 65001
+    loopback0_ip: '10.0.0.5' # <-- Standardized to use this key
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R1', ip: '10.0.15.2', mask: '255.255.255.252', peer_ip: '10.0.15.1', peer_as: 100 }
+      - { intf: 'e0/2', desc: 'To_R6_iBGP', ip: '10.0.56.1', mask: '255.255.255.252' }
+      - { intf: 'e0/3', desc: 'To_R7_iBGP', ip: '10.0.57.1', mask: '255.255.255.252' }
+  # ... and so on for R6, R7, R8, adding the loopback0_ip key
+  R6:
+    bgp_as: 65001
+    loopback0_ip: '10.0.0.6'
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R2', ip: '10.0.26.2', mask: '255.255.255.252', peer_ip: '10.0.26.1', peer_as: 200 }
+      # ... other interfaces
+  R7:
+    bgp_as: 65001
+    loopback0_ip: '10.0.0.7'
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R3', ip: '10.0.37.2', mask: '255.255.255.252', peer_ip: '10.0.37.1', peer_as: 100 }
+      # ... other interfaces
+  R8:
+    bgp_as: 65001
+    loopback0_ip: '10.0.0.8'
+    interfaces:
+      - { intf: 'e0/1', desc: 'To_R4', ip: '10.0.48.2', mask: '255.255.255.252', peer_ip: '10.0.48.1', peer_as: 200 }
+      # ... other interfaces

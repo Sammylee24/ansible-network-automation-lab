@@ -1,0 +1,12 @@
+- name: Configure router banner
+  hosts: routers,edges
+  gather_facts: no
+  tasks:
+    - name: Set login banner
+      cisco.ios.ios_banner:
+        banner: login
+        text: |
+          Unauthorized access prohibited.
+          Only Authorized Users are allowed access.
+          Please contact Samuel Adebayo for more information.
+        state: present

@@ -1,0 +1,53 @@
+---
+- name: Configure iBGP full mesh
+  hosts: routers
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    bgp_as: 65001
+
+  tasks:
+    - name: Configure BGP Process and Router-id
+      cisco.ios.ios_config:
+        parents: "router bgp {{ bgp_as }}"
+        lines:
+          - "bgp router-id 10.0.0.{{ inventory_hostname[1:] }}"
+          - "no bgp default ipv4-unicast"
+
+    - name: Configure iBGP neighbors
+      cisco.ios.ios_config:
+        parents: "router bgp {{ bgp_as }}"
+        lines:
+          - "neighbor 10.0.0.{{ item[1:] }} remote-as {{ bgp_as }}"
+          - "neighbor 10.0.0.{{ item[1:] }} update-source Loopback0"
+      # Best practice: quote Jinja expressions
+      loop: "{{ groups['routers'] }}"
+      when: item != inventory_hostname
+
+    - name: Activate iBGP neighbors in address-family
+      cisco.ios.ios_config:
+        parents:
+          - "router bgp {{ bgp_as }}"
+          - "address-family ipv4"
+        lines:
+          - "neighbor 10.0.0.{{ item[1:] }} activate"
+          - "neighbor 10.0.0.{{ item[1:] }} next-hop-self"
+      loop: "{{ groups['routers'] }}"
+      when: item != inventory_hostname
+
+    - name: Verify iBGP neighbor establishments
+      cisco.ios.ios_command:
+        commands:
+          - "show ip bgp summary"
+      register: bgp_summary
+      retries: 6
+      delay: 10
+      until: "not 'Idle' in bgp_summary.stdout[0]"
+      # Add this so the playbook doesn't fail if a neighbor is down.
+      # It will just report the final state.
+      ignore_errors: true
+
+    - name: Display BGP summary
+      debug:
+        var: bgp_summary.stdout_lines

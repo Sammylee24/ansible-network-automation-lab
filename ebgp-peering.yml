@@ -1,0 +1,78 @@
+---
+- name: Configure Interfaces and eBGP Peerings
+  hosts: all_routers
+  gather_facts: no
+  connection: network_cli
+
+  vars_files:
+    - network_vars.yml
+
+  tasks:
+    - name: Configure physical device interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ item.intf }}"
+        lines:
+          - "description {{ item.desc }}"
+          - "ip address {{ item.ip }} {{ item.mask }}"
+          - "no shutdown"
+      loop: "{{ interfaces[inventory_hostname].interfaces }}"
+      loop_control:
+        label: "{{ item.intf }}"
+
+    - name: Configure Loopback0 interfaces
+      cisco.ios.ios_config:
+        parents: "interface Loopback0"
+        lines:
+          - "ip address {{ interfaces[inventory_hostname].loopback0_ip }} 255.255.255.255"
+
+    - name: Configure BGP Process and Router-ID
+      cisco.ios.ios_config:
+        parents: "router bgp {{ interfaces[inventory_hostname].bgp_as }}"
+        lines:
+          - "bgp router-id {{ interfaces[inventory_hostname].loopback0_ip }}"
+          - "no bgp default ipv4-unicast"
+
+    - name: Configure eBGP Neighbors
+      cisco.ios.ios_config:
+        parents: "router bgp {{ interfaces[inventory_hostname].bgp_as }}"
+        lines:
+          - "neighbor {{ item.peer_ip }} remote-as {{ item.peer_as }}"
+      loop: "{{ interfaces[inventory_hostname].interfaces }}"
+      when: item.peer_as is defined
+
+    - name: Activate eBGP neighbors in address-family
+      cisco.ios.ios_config:
+        parents:
+          - "router bgp {{ interfaces[inventory_hostname].bgp_as }}"
+          - "address-family ipv4"
+        lines:
+          - "neighbor {{ item.peer_ip }} activate"
+      loop: "{{ interfaces[inventory_hostname].interfaces }}"
+      when: item.peer_as is defined
+
+    - name: Advertise Loopback network into BGP (External AS only)
+      cisco.ios.ios_config:
+        parents:
+          - "router bgp {{ interfaces[inventory_hostname].bgp_as }}"
+          - "address-family ipv4"
+        lines:
+          - "network {{ interfaces[inventory_hostname].loopback0_ip }} mask 255.255.255.255"
+      # Only run this task if the router is NOT in AS 65001
+      when: interfaces[inventory_hostname].bgp_as != 65001
+
+    - name: Verify BGP neighbors
+      cisco.ios.ios_command:
+        commands: 
+        - "show ip bgp summary"
+        - "show ip route bgp"
+      register: bgp_summary
+      when: interfaces[inventory_hostname].interfaces | selectattr('peer_as', 'defined') | list | length > 0
+      retries: 5
+      delay: 10
+      until: "not 'Idle' in bgp_summary.stdout[0] and not 'Active' in bgp_summary.stdout[0]"
+      ignore_errors: true
+
+    - name: Display BGP Summary
+      debug:
+        var: bgp_summary.stdout_lines
+      when: bgp_summary.stdout_lines is defined

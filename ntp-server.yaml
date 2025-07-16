@@ -1,0 +1,36 @@
+---
+- name: NTP Server Setup
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Install the NTP server
+      apt:
+        name: chrony
+        state: present
+        update_cache: yes
+
+    - name: Configure chrony as an NTP server
+      lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^pool '
+        line: "# Commented by Ansible"
+        state: present
+
+    - name: Add the NTP server local configuration
+      lineinfile:
+        path: /etc/chrony/chrony.conf
+        line: "allow 192.168.220.0/24"
+        create: yes
+
+    - name: Restart the chrony service
+      systemd:
+        name: chrony
+        enabled: yes
+        state: restarted
+
+    - name: Allow NTP through the firewall
+      ufw:
+        rule: allow
+        port: 123
+        proto: udp
+        comment: "Allow the NTP traffic"

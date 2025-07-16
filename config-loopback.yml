@@ -1,0 +1,26 @@
+---
+
+- name: configure loopback 0 address on all devices
+  hosts: routers,edges
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: configure loopback addresses
+      cisco.ios.ios_config:
+        lines:
+          - interface Loopback 0
+          - description loopback
+          - ip address 10.0.0.{{ inventory_hostname[1:] }} 255.255.255.255
+          - no shutdown
+
+    - name: check ip interfaces
+      cisco.ios.ios_command:
+        commands:
+          - show interface description
+          - show ip interface brief | include up
+      register: interface_output
+
+    - name: display the interface output
+      debug:
+        var: interface_output.stdout_lines

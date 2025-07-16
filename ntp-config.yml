@@ -1,0 +1,23 @@
+---
+
+- name: Configure NTP
+  hosts: edge,routers
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Add NTP server
+      cisco.ios.ios_config:
+        lines:
+          - ntp server 192.168.220.77 prefer minpoll 4 maxpoll 4
+
+    - name: Check routers for NTP
+      cisco.ios.ios_command:
+        commands:
+          - show ntp associations
+          - show ntp status
+      register: ntp_output
+
+    - name: Display output of commands
+      debug:
+        msg: "{{ ntp_output.stdout_lines }}"

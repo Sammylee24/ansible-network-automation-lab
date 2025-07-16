@@ -1,0 +1,40 @@
+---
+
+- name: Configure OSPF on backbone
+  hosts: routers
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Enable OSPF globally
+      cisco.ios.ios_config:
+        lines:
+          - router-id 10.0.0.{{ inventory_hostname[1:] }}
+        parents: router ospf 1
+
+    - name: Enable OSPF on interfaces
+      cisco.ios.ios_config:
+        lines:
+          - ip ospf 1 area 0
+        parents: interface range e0/2-3
+
+    - name: Enable OSPF on Loopback
+      cisco.ios.ios_config:
+        lines:
+          - ip ospf 1 area 0
+        parents: interface loopback0
+       
+    - name: Verify OSPF configuration
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf neighbor
+          - show ip route
+      register: ospf_output
+
+      retries: 7
+      delay: 10
+      until: "'FULL' in ospf_output.stdout[0]"
+
+    - name: Display OSPF verification
+      debug:
+        var: ospf_output.stdout_lines
