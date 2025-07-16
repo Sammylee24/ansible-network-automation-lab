@@ -18,8 +18,8 @@ as100_routers
 as200_routers
 
 [all_routers:vars]
-ansible_user=samuel
-ansible_ssh_password=Samuel@123
+ansible_user=username
+ansible_ssh_password=password
 ansible_ssh_port=22
 ansible_connection=network_cli
 ansible_network_os=cisco.ios.ios
